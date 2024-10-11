@@ -246,7 +246,6 @@ func (p *S3Proxy) Provision(ctx caddy.Context) (err error) {
 }
 
 func (p resolved_proxy) getS3Object(bucket string, path string, headers http.Header) (*s3.GetObjectOutput, error) {
-	path = strings.TrimLeft(path, "/")
 	oi := &s3.GetObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(path),
