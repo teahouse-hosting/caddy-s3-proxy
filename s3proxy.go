@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	// "github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	caddy "github.com/caddyserver/caddy/v2"
@@ -530,13 +530,13 @@ func (p resolved_proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullP
 				break
 			} else {
 				logIt := true
-				if aerr, ok := err.(awserr.Error); ok {
-					// Getting no such key here could be rather common
-					// So only log a warning if we get any other type of error
-					if aerr.Code() != s3.ErrCodeNoSuchKey {
-						logIt = false
-					}
-				}
+				// if aerr, ok := err.(awserr.Error); ok {
+				// 	// Getting no such key here could be rather common
+				// 	// So only log a warning if we get any other type of error
+				// 	if aerr.Code() != s3.ErrCodeNoSuchKey {
+				// 		logIt = false
+				// 	}
+				// }
 				if logIt {
 					p.log.Warn("error when looking for index",
 						zap.String("bucket", p.Bucket),
