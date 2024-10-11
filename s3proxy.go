@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	// "github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/service/s3"
 	caddy "github.com/caddyserver/caddy/v2"
 	"github.com/caddyserver/caddy/v2/modules/caddyhttp"
@@ -197,6 +198,8 @@ func (p *S3Proxy) Provision(ctx caddy.Context) (err error) {
 	}
 
 	var config aws.Config
+
+	config.Credentials = credentials.NewStaticCredentials("", "", "")
 
 	// If Region is not specified NewSession will look for it from an env value AWS_REGION
 	if p.Region != "" {
