@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -563,24 +564,38 @@ func fileHidden(filename string, hide []string) bool {
 	return false
 }
 
-type head_wrapper struct {
+type headWrapper struct {
 	wrappee http.ResponseWriter
+	length int
+	statusCode int
 }
 
-func (w head_wrapper) Header() http.Header {
+func (w headWrapper) Header() http.Header {
 	return w.wrappee.Header()
 }
 
-func (w head_wrapper) Write(data []byte) (int, error) {
-	// FIXME: Do header and contet-type stuff
+func (w headWrapper) Write(data []byte) (int, error) {
+	fmt.Printf("Write, len=%v\n", len(data))
+	w.length += len(data)
 	return len(data), nil
 }
 
-func (w head_wrapper) WriteHeader(statusCode int) {
-	w.wrappee.WriteHeader(statusCode)
+func (w headWrapper) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
 }
 
 func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath string) error {
-	wrapper := head_wrapper{wrappee: w}
-	return p.GetHandler(wrapper, r, fullPath)
+	wrapper := headWrapper{wrappee: w}
+	err := p.GetHandler(wrapper, r, fullPath)
+	if err != nil {
+		return err
+	}
+	if wrapper.length != 0 {
+		w.Header().Add("Content-Length", strconv.Itoa(wrapper.length))
+	}
+	if wrapper.statusCode == 0 {
+		wrapper.statusCode = 200
+	}
+	w.WriteHeader(wrapper.statusCode)
+	return nil
 }
