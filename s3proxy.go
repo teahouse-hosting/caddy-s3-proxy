@@ -361,6 +361,8 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
 	switch r.Method {
 	case http.MethodGet:
 		err = p.GetHandler(w, r, fullPath)
+	case http.MethodHead:
+		err = p.HeadHandler(w, r, fullPath)
 	case http.MethodPut:
 		err = p.PutHandler(w, r, fullPath)
 	case http.MethodDelete:
@@ -506,6 +508,11 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
 	}
 
 	return p.writeResponseFromGetObject(w, obj)
+}
+
+func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath string) error {
+	err := errors.New("not implemented")
+	return caddyhttp.Error(http.StatusNotImplemented, err)
 }
 
 func setStrHeader(w http.ResponseWriter, key string, value *string) {
