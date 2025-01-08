@@ -510,11 +510,6 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
 	return p.writeResponseFromGetObject(w, obj)
 }
 
-func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath string) error {
-	err := errors.New("not implemented")
-	return caddyhttp.Error(http.StatusNotImplemented, err)
-}
-
 func setStrHeader(w http.ResponseWriter, key string, value *string) {
 	if value != nil && len(*value) > 0 {
 		w.Header().Add(key, *value)
@@ -566,4 +561,26 @@ func fileHidden(filename string, hide []string) bool {
 	}
 
 	return false
+}
+
+type head_wrapper struct {
+	wrappee http.ResponseWriter
+}
+
+func (w head_wrapper) Header() http.Header {
+	return w.wrappee.Header()
+}
+
+func (w head_wrapper) Write(data []byte) (int, error) {
+	// FIXME: Do header and contet-type stuff
+	return len(data), nil
+}
+
+func (w head_wrapper) WriteHeader(statusCode int) {
+	w.wrappee.WriteHeader(statusCode)
+}
+
+func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath string) error {
+	wrapper := head_wrapper{wrappee: w}
+	return p.GetHandler(wrapper, r, fullPath)
 }
