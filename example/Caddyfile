@@ -3,7 +3,7 @@
 	debug
 }
 
-:80 {
+:8069 {
 	log
 	respond /health-check "OK" 200
 	respond /test "This is working" 200
@@ -14,7 +14,7 @@
                 s3proxy {
                         region "us-west-2"
                         bucket "test-results"
-			endpoint "http://localstack:4566/"
+			endpoint "http://localhost:4566/"
 			force_path_style
                 }
 	}
@@ -27,7 +27,7 @@
                 s3proxy {
                         region "us-west-2"
                         bucket "bkt"
-			endpoint "http://localstack:4566/"
+			endpoint "http://localhost:4566/"
 			enable_put
 			enable_delete
 			browse
@@ -41,7 +41,7 @@
 		region "us-west-2"
 		bucket "my-bucket"
 		index index.html
-		endpoint "http://localstack:4566/"
+		endpoint "http://localhost:4566/"
 		force_path_style
 	}
 }
