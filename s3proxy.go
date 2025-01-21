@@ -11,6 +11,7 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 
@@ -361,6 +362,8 @@ func (p S3Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request, next caddyhtt
 	switch r.Method {
 	case http.MethodGet:
 		err = p.GetHandler(w, r, fullPath)
+	case http.MethodHead:
+		err = p.HeadHandler(w, r, fullPath)
 	case http.MethodPut:
 		err = p.PutHandler(w, r, fullPath)
 	case http.MethodDelete:
@@ -559,4 +562,40 @@ func fileHidden(filename string, hide []string) bool {
 	}
 
 	return false
+}
+
+type headWrapper struct {
+	wrappee http.ResponseWriter
+	length int
+	statusCode int
+}
+
+func (w headWrapper) Header() http.Header {
+	return w.wrappee.Header()
+}
+
+func (w headWrapper) Write(data []byte) (int, error) {
+	fmt.Printf("Write, len=%v\n", len(data))
+	w.length += len(data)
+	return len(data), nil
+}
+
+func (w headWrapper) WriteHeader(statusCode int) {
+	w.statusCode = statusCode
+}
+
+func (p S3Proxy) HeadHandler(w http.ResponseWriter, r *http.Request, fullPath string) error {
+	wrapper := headWrapper{wrappee: w}
+	err := p.GetHandler(wrapper, r, fullPath)
+	if err != nil {
+		return err
+	}
+	if wrapper.length != 0 {
+		w.Header().Add("Content-Length", strconv.Itoa(wrapper.length))
+	}
+	if wrapper.statusCode == 0 {
+		wrapper.statusCode = 200
+	}
+	w.WriteHeader(wrapper.statusCode)
+	return nil
 }
